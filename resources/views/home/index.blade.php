@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Kn.Ford - Developer Portfolio</title>
+        <title>FOURDA X TRIWARA Portfolio</title>
 
         @fonts
 
@@ -31,7 +31,7 @@
         <!-- Navigation -->
         <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 lg:px-12 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <div class="text-2xl font-black text-gray-900">Kn.Ford</div>
+                <div class="text-2xl font-black text-gray-900">FOURDA X TRIWARA </div>
                 <div class="hidden lg:flex items-center gap-12 text-sm font-medium text-gray-700">
                     <a href="/" class="hover:text-blue-600 transition">Home</a>
                     <a href="/about" class="hover:text-blue-600 transition">About</a>
