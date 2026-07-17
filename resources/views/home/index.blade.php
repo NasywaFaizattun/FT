@@ -8,6 +8,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
+            /* Mengaktifkan status awal reveal jika JS berjalan */
             .js-reveal-ready [data-reveal] {
                 opacity: 0;
                 transform: translateY(24px) scale(0.985);
@@ -19,6 +20,7 @@
                 will-change: opacity, transform, filter;
             }
 
+            /* Efek ketika elemen masuk ke viewport */
             .js-reveal-ready [data-reveal].is-visible {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -45,7 +47,7 @@
             .hero-bg {
                 background-image:
                     linear-gradient(90deg, rgba(7, 14, 39, 0.94) 0%, rgba(9, 23, 72, 0.80) 50%, rgba(18, 78, 156, 0.45) 100%),
-                    url('{{ $hero?->background_image_path ? asset('storage/'.$hero->background_image_path) : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1800&q=80' }}');
+                    url('{{ $hero?->background_image_path ? asset('storage/'.$hero->background_image_path) : "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1800&q=80" }}');
                 background-position: center;
                 background-size: cover;
                 background-repeat: no-repeat;
@@ -69,7 +71,7 @@
             }
         </style>
     </head>
-    <body class="bg-slate-950 text-white antialiased">
+    <body class="bg-slate-950 text-white antialiased js-reveal-ready">
         @php
             $members = $members->isNotEmpty() ? $members : collect([
                 (object) ['name' => 'Alya', 'quote' => 'Belajar konsisten, hasil akan mengikuti.', 'photo_path' => null],
@@ -120,8 +122,6 @@
                                         @csrf
                                         <button type="submit" class="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">Logout</button>
                                     </form>
-                                @else
-                                    <!-- <a href="{{ route('login') }}" class="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-100">Login</a> -->
                                 @endauth
                             </div>
                         </div>
@@ -200,14 +200,23 @@
                 <div class="mx-auto max-w-7xl">
                     <div class="max-w-2xl mb-12" data-reveal>
                         <p class="text-xs sm:text-sm font-bold uppercase tracking-[0.35em] text-sky-300">Section 2</p>
-                        <h2 class="mt-3 text-4xl sm:text-5xl font-black text-white">{{ $members->count() }} anggota kelas kami</h2>
+                        <h2 class="mt-3 text-4xl sm:text-5xl font-black text-white">{{ $members->count() }} anggota  kami</h2>
                         <p class="mt-4 text-lg text-white/70">Setiap kartu punya foto, nama, dan keterangan yang bisa diubah dari backend.</p>
                     </div>
 
                     <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($members as $member)
-                            <article class="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 soft-shadow backdrop-blur" data-reveal data-reveal-delay="{{ $loop->index * 90 }}">
-                                <div class="h-64 bg-cover bg-center" @if ($member->photo_path) style="background-image: url('{{ asset('storage/'.$member->photo_path) }}')" @else style="background-image: url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80')" @endif></div>
+                            @php
+                                $imgUrl = $member->photo_path ? asset('storage/'.$member->photo_path) : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80';
+                            @endphp
+                            <article class="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 soft-shadow backdrop-blur cursor-pointer hover:scale-[1.02] transition duration-300 group" 
+                                     data-member-card 
+                                     data-src="{{ $imgUrl }}">
+                                <div class="h-64 overflow-hidden">
+                                    <div class="h-full w-full bg-cover bg-center group-hover:scale-105 transition duration-500" 
+                                         style="background-image: url('{{ $imgUrl }}')">
+                                    </div>
+                                </div>
                                 <div class="p-6">
                                     <h3 class="text-xl font-black text-white">{{ $member->name }}</h3>
                                     <p class="mt-2 text-white/70">{{ $member->quote }}</p>
@@ -282,5 +291,131 @@
                 </div>
             </section>
         </main>
+
+       <!-- Elemen Overlay Global (Lightbox Modals) Tersembunyi -->
+<div id="photoLightbox" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-950/95 backdrop-blur-md opacity-0 transition-opacity duration-300 p-4">
+    <!-- Kartu Utuh yang Membesar -->
+    <div class="relative w-full max-w-4xl overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900 soft-shadow transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="lightboxCard">
+        
+        <!-- Area Gambar: Mempertahankan aspek rasio asli & tidak membuat gambar gepeng -->
+        <div class="w-full bg-slate-950 flex items-center justify-center overflow-hidden flex-1 min-h-0">
+            <img id="lightboxImage" src="" alt="Foto Anggota" class="max-w-full max-h-[60vh] object-contain w-auto h-auto block mx-auto">
+        </div>
+
+        <!-- Bagian Nama & Moto -->
+        <div class="p-6 bg-slate-900/90 border-t border-white/5 flex-shrink-0 z-10">
+            <h3 class="text-2xl font-black text-sky-400 uppercase tracking-wide" id="lightboxName">Nama Anggota</h3>
+            <p class="mt-2 text-base text-white/75 italic leading-relaxed" id="lightboxQuote">"Moto Anggota"</p>
+        </div>
+    </div>
+    
+    <!-- Tombol Kembali / Back -->
+    <button id="closeLightbox" class="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-black shadow-lg transition hover:bg-slate-200 active:scale-95 z-10">
+    ← Kembali
+</button>
+</div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // --- Kode Animasi Scroll Reveal Bawaan ---
+                const revealElements = document.querySelectorAll("[data-reveal]");
+
+                const observerOptions = {
+                    root: null, 
+                    rootMargin: "0px 0px -80px 0px", 
+                    threshold: 0.1 
+                };
+
+                const revealObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const element = entry.target;
+                            const delay = element.getAttribute("data-reveal-delay");
+                            if (delay) {
+                                setTimeout(() => {
+                                    element.classList.add("is-visible");
+                                }, delay);
+                            } else {
+                                element.classList.add("is-visible");
+                            }
+                            observer.unobserve(element);
+                        }
+                    });
+                }, observerOptions);
+
+                revealElements.forEach(element => {
+                    revealObserver.observe(element);
+                });
+
+
+                // --- KODE INTERAKSI LIGHTBOX KARTU UTUH ---
+                const memberCards = document.querySelectorAll("[data-member-card]");
+                const lightbox = document.getElementById("photoLightbox");
+                const lightboxCard = document.getElementById("lightboxCard");
+                const lightboxImg = document.getElementById("lightboxImage");
+                const lightboxName = document.getElementById("lightboxName");
+                const lightboxQuote = document.getElementById("lightboxQuote");
+                const closeBtn = document.getElementById("closeLightbox");
+
+                // Fungsi untuk membuka Lightbox Kartu Lengkap
+                memberCards.forEach(card => {
+                    card.addEventListener("click", function () {
+                        const imageSrc = this.getAttribute("data-src");
+                        const nameText = this.querySelector('h3').textContent.trim();
+                        const quoteText = this.querySelector('p').textContent.trim();
+
+                        // Terapkan semua data ke komponen modal
+                        lightboxImg.src = imageSrc;
+                        lightboxName.innerText = nameText;
+                        lightboxQuote.innerText = `"${quoteText}"`;
+                        
+                        // Tampilkan overlay container
+                        lightbox.classList.remove("hidden");
+                        lightbox.classList.add("flex");
+                        
+                        // Kunci scroll body belakang
+                        document.body.style.overflow = "hidden";
+
+                        // Jalankan animasi transisi membesar
+                        setTimeout(() => {
+                            lightbox.classList.remove("opacity-0");
+                            lightbox.classList.add("opacity-100");
+                            lightboxCard.classList.remove("scale-95");
+                            lightboxCard.classList.add("scale-100");
+                        }, 10);
+                    });
+                });
+
+                // Fungsi untuk menutup Lightbox
+                function hideLightbox() {
+                    lightbox.classList.remove("opacity-100");
+                    lightbox.classList.add("opacity-0");
+                    lightboxCard.classList.remove("scale-100");
+                    lightboxCard.classList.add("scale-95");
+                    
+                    document.body.style.overflow = "";
+
+                    setTimeout(() => {
+                        lightbox.classList.remove("flex");
+                        lightbox.classList.add("hidden");
+                        lightboxImg.src = ""; 
+                    }, 300);
+                }
+
+                closeBtn.addEventListener("click", hideLightbox);
+
+                lightbox.addEventListener("click", function (e) {
+                    if (e.target === lightbox) {
+                        hideLightbox();
+                    }
+                });
+
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape" && !lightbox.classList.contains("hidden")) {
+                        hideLightbox();
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
